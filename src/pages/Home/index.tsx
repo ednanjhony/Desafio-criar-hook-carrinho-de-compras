@@ -32,15 +32,21 @@ const Home = (): JSX.Element => {
 
   useEffect(() => {
     async function loadProducts() {
-      api.get('products')
-				.then(response => setProducts(response.data))
+			const { data } = await api.get('products');
+
+			const loadProducts = data.map((product: Product) => ({
+				...product,
+				priceFormatted: formatPrice(product.price)
+			}))
+
+			setProducts(loadProducts);
     }
 
     loadProducts();
   }, []);
 
   function handleAddProduct(id: number) {
-    // TODO
+    addProduct(id);
   }
 
   return (
@@ -53,7 +59,7 @@ const Home = (): JSX.Element => {
 					<button
 						type="button"
 						data-testid="add-product-button"
-					// onClick={() => handleAddProduct(product.id)}
+						onClick={() => handleAddProduct(product.id)}
 					>
 						<div data-testid="cart-product-quantity">
 							<MdAddShoppingCart size={16} color="#FFF" />

@@ -46,14 +46,20 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 				setCart([...cart, { ...response.data, amount: 1 }]);
 
 				localStorage.setItem(
-					"@RocketseatShoes:cart",
-					JSON.stringify([...cart, { ...response, amount: 1 }])
+					"@RocketShoes:cart",
+					JSON.stringify([...cart, { ...response.data, amount: 1 }])
 				);
+			} else if (hasProduct && hasProduct.amount <= stock.amount) {
+				const amount = hasProduct.amount + 1;
+				updateProductAmount({
+					productId: productId,
+					amount
+				});
 			} else {
-				toast.error("Não há quantidade solicitada.")
+				toast.error('Quantidade solicitada fora de estoque');
 			}
     } catch {
-      toast.error("Erro ao adicionar o produto.")
+      toast.error('Erro na adição do produto');
     }
 
 		
@@ -61,9 +67,20 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      const hasProduct = cart.find(product => product.id === productId);
+
+			if (hasProduct) {
+				const getOthersProducts = cart.filter(product => product.id !== productId);
+
+				setCart(getOthersProducts);
+
+				localStorage.setItem('@RocketShoes:cart', JSON.stringify(getOthersProducts))
+			} else {
+				throw new Error();
+			}
+
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
@@ -72,9 +89,24 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      const { data } = await api.get(`stock/${productId}`);
+			const stock: Stock = data;
+
+			if (amount < 1) {
+				throw new Error();
+			} else if (amount <= stock.amount) {
+				const updateCartList = cart.map((product) => 
+					product.id === productId ? { ...product, amount } : product
+				);
+
+				setCart(updateCartList);
+
+				localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateCartList));
+			}else {
+				toast.error('Quantidade solicitada fora de estoque');
+			}
     } catch {
-      // TODO
+      toast.error('Erro na alteração de quantidade do produto');
     }
   };
 
